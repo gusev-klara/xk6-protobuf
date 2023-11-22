@@ -1,4 +1,4 @@
-module github.com/traveltime-dev/xk6-protobuf
+module github.com/gusev-klara/xk6-protobuf
 
 go 1.20
 
