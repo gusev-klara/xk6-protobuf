@@ -1,14 +1,16 @@
 package protobuf
 
 import (
+	"log"
+
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"google.golang.org/protobuf/encoding/protojson"
-	"log"
 
 	"go.k6.io/k6/js/modules"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
@@ -20,6 +22,17 @@ type Protobuf struct{}
 
 type ProtoFile struct {
 	messageDesc protoreflect.MessageDescriptor
+}
+
+type resolver struct {
+}
+
+func (r resolver) FindDescriptorByName(name protoreflect.FullName) (protoreflect.Descriptor, error) {
+	return protoregistry.GlobalFiles.FindDescriptorByName(name)
+}
+
+func (r resolver) FindFileByPath(path string) (protoreflect.FileDescriptor, error) {
+	return protoregistry.GlobalFiles.FindFileByPath(path)
 }
 
 func (p *Protobuf) Load(protoFilePath, lookupType string) ProtoFile {
@@ -35,7 +48,7 @@ func (p *Protobuf) Load(protoFilePath, lookupType string) ProtoFile {
 	// Convert the *desc.FileDescriptor to *descriptorpb.FileDescriptorProto
 	schema := fileDesc[0].AsFileDescriptorProto()
 	// Convert the FileDescriptorProto to a protoreflect.FileDescriptor
-	fd, err := protodesc.NewFile(schema, nil)
+	fd, err := protodesc.NewFile(schema, resolver{})
 	if err != nil {
 		log.Fatal(err)
 	}
