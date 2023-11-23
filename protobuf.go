@@ -24,17 +24,6 @@ type ProtoFile struct {
 	messageDesc protoreflect.MessageDescriptor
 }
 
-type resolver struct {
-}
-
-func (r resolver) FindDescriptorByName(name protoreflect.FullName) (protoreflect.Descriptor, error) {
-	return protoregistry.GlobalFiles.FindDescriptorByName(name)
-}
-
-func (r resolver) FindFileByPath(path string) (protoreflect.FileDescriptor, error) {
-	return protoregistry.GlobalFiles.FindFileByPath(path)
-}
-
 func (p *Protobuf) Load(protoFilePath, lookupType string) ProtoFile {
 	// Read the .proto file directly
 	parser := protoparse.Parser{}
@@ -48,7 +37,7 @@ func (p *Protobuf) Load(protoFilePath, lookupType string) ProtoFile {
 	// Convert the *desc.FileDescriptor to *descriptorpb.FileDescriptorProto
 	schema := fileDesc[0].AsFileDescriptorProto()
 	// Convert the FileDescriptorProto to a protoreflect.FileDescriptor
-	fd, err := protodesc.NewFile(schema, resolver{})
+	fd, err := protodesc.NewFile(schema, protoregistry.GlobalFiles)
 	if err != nil {
 		log.Fatal(err)
 	}
